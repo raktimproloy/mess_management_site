@@ -3,14 +3,36 @@ import { useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function PaymentConfirmation() {
   const router = useRouter();
+  const { user, loading } = useAuth();
 //   const { amount, plan, transactionId } = router.query;
 
   useEffect(() => {
-    // Animation on page load
-  }, []);
+    // Check authentication on component mount
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the page if user is not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">

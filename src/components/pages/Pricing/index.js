@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 const PricingPage = () => {
+  const router = useRouter();
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -17,9 +19,8 @@ const PricingPage = () => {
   });
   
   // Open demo modal when a plan is selected
-  const handleSelectPlan = (plan) => {
-    setSelectedPlan(plan);
-    setShowDemoModal(true);
+  const handleSelectPlan = () => {
+    router.push('/pricing/checkout');
   };
 
   // Handle form input changes
@@ -97,110 +98,6 @@ const PricingPage = () => {
     </motion.div>
   );
 
-  // SMS pricing card
-  const SmsCard = ({ title, volume, price, period, features, highlight }) => (
-    <motion.div
-      whileHover={{ y: -10 }}
-      className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border ${
-        highlight ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-700'
-      } overflow-hidden`}
-    >
-      {highlight && (
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-center py-2 text-sm font-bold">
-          MOST POPULAR
-        </div>
-      )}
-      <div className="p-8">
-        <h3 className="text-xl font-bold mb-2">{title}</h3>
-        <p className="text-gray-400 mb-4">{volume} SMS per month</p>
-        
-        <div className="text-3xl font-bold mb-2">
-          {price}
-        </div>
-        <p className="text-gray-400 mb-6">{period}</p>
-        
-        <ul className="space-y-3 mb-8">
-          {features.map((feature, index) => (
-            <li key={index} className="flex items-start">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mt-0.5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-        
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className={`w-full py-3 px-4 rounded-lg font-medium ${
-            highlight 
-              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' 
-              : 'bg-gray-800 text-white hover:bg-gray-700'
-          }`}
-          onClick={() => handleSelectPlan(`${title} SMS Package`)}
-        >
-          Select Plan
-        </motion.button>
-      </div>
-    </motion.div>
-  );
-
-  // Unlimited SMS card
-  const UnlimitedSmsCard = () => (
-    <motion.div
-      whileHover={{ y: -10 }}
-      className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-purple-500 overflow-hidden"
-    >
-      <div className="p-8">
-        <div className="mb-2 text-purple-400 font-medium">Premium Solution</div>
-        <h3 className="text-2xl font-bold mb-4">Unlimited SMS</h3>
-        <p className="text-gray-400 mb-6">Never worry about SMS limits again with our premium package</p>
-        
-        <div className="text-4xl font-bold mb-6">
-          $30
-          <span className="text-lg font-normal text-gray-400"> / month</span>
-        </div>
-        
-        <ul className="space-y-3 mb-8">
-          <li className="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500 mt-0.5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <span>Unlimited SMS messages</span>
-          </li>
-          <li className="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500 mt-0.5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <span>Priority message delivery</span>
-          </li>
-          <li className="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500 mt-0.5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <span>Dedicated support line</span>
-          </li>
-          <li className="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500 mt-0.5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <span>Custom SMS templates</span>
-          </li>
-        </ul>
-        
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium rounded-lg"
-          onClick={() => handleSelectPlan('Unlimited SMS')}
-        >
-          Get Unlimited SMS
-        </motion.button>
-      </div>
-    </motion.div>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
       <Head>
@@ -272,109 +169,6 @@ const PricingPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-3">
               <TemplateCard />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SMS Pricing Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900/50 to-gray-800/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <motion.h2 
-              className="text-3xl md:text-4xl font-bold mb-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              SMS Notification Packages
-            </motion.h2>
-            <motion.p 
-              className="text-xl text-gray-300 max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              Add powerful SMS capabilities to your student management system
-            </motion.p>
-            
-            {/* Billing Toggle */}
-            <motion.div 
-              className="max-w-md mx-auto bg-gray-800 rounded-xl p-1 flex mt-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              {['monthly', 'yearly'].map((cycle) => (
-                <button
-                  key={cycle}
-                  onClick={() => setBillingCycle(cycle)}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
-                    billingCycle === cycle
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                      : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  {cycle === 'monthly' ? 'Monthly Billing' : 'Yearly Billing (Save 15%)'}
-                </button>
-              ))}
-            </motion.div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <SmsCard 
-              title="Basic" 
-              volume="50" 
-              price={billingCycle === 'yearly' ? "$102/year" : "$10/month"} 
-              period={billingCycle === 'yearly' ? "Billed annually" : "Billed monthly"} 
-              features={["Standard delivery", "95% deliverability", "Basic reporting"]} 
-            />
-            
-            <SmsCard 
-              title="Standard" 
-              volume="100" 
-              price={billingCycle === 'yearly' ? "$153/year" : "$15/month"} 
-              period={billingCycle === 'yearly' ? "Billed annually" : "Billed monthly"} 
-              features={["Priority delivery", "98% deliverability", "Advanced reporting", "SMS templates"]} 
-              highlight={true}
-            />
-            
-            <SmsCard 
-              title="Plus" 
-              volume="150" 
-              price={billingCycle === 'yearly' ? "$204/year" : "$20/month"} 
-              period={billingCycle === 'yearly' ? "Billed annually" : "Billed monthly"} 
-              features={["Highest priority", "99% deliverability", "Full analytics", "Dedicated number", "24/7 support"]} 
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Unlimited SMS Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <motion.h2 
-              className="text-3xl md:text-4xl font-bold mb-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              Premium SMS Solution
-            </motion.h2>
-            <motion.p 
-              className="text-xl text-gray-300 max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              For institutions that need unlimited messaging capabilities
-            </motion.p>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="lg:col-span-2">
-              <UnlimitedSmsCard />
             </div>
           </div>
         </div>

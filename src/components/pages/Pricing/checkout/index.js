@@ -1,14 +1,25 @@
 'use client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 const CheckoutPage = () => {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [selectedSmsPackage, setSelectedSmsPackage] = useState(null);
   const [subdomain, setSubdomain] = useState('');
   const [subdomainError, setSubdomainError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
   
   const smsPackages = [
     {
@@ -104,7 +115,7 @@ const CheckoutPage = () => {
     // Simulate payment processing
     setTimeout(() => {
       setIsProcessing(false);
-      setOrderComplete(true);
+      router.push('/pricing/payment');
     }, 2000);
   };
 
@@ -119,39 +130,32 @@ const CheckoutPage = () => {
     return total;
   };
 
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the page if user is not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+    <div className="min-h-screen py-32 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
       <Head>
         <title>Checkout | EduFlow - Student Management Solutions</title>
         <meta name="description" content="Complete your purchase of our student management solution" />
       </Head>
 
-      {/* Header */}
-      <header className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700 py-4 px-6">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-              EduFlow
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <span className="hidden md:block">Secure Checkout</span>
-            <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <span>Secure</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl  mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Order Configuration */}
           <div>
@@ -322,7 +326,7 @@ const CheckoutPage = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="sticky top-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-6"
+              className="sticky top-24 bg-gradient-to-br  from-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-6"
             >
               <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
               
@@ -467,17 +471,6 @@ const CheckoutPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Footer */}
-      <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-gray-700">
-        <div className="max-w-7xl mx-auto text-center text-gray-500 text-sm">
-          © {new Date().getFullYear()} EduFlow. All rights reserved.
-          <div className="mt-2">
-            <a href="#" className="hover:text-gray-300 mx-2">Terms of Service</a>
-            <a href="#" className="hover:text-gray-300 mx-2">Privacy Policy</a>
-            <a href="#" className="hover:text-gray-300 mx-2">Refund Policy</a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

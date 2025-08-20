@@ -183,23 +183,36 @@ export function createToken(payload, expiresIn = '7d') {
 // Get user from cookies (for server-side use)
 export function getUserFromCookies(request) {
   try {
+    // First try to get token from cookies
+    const cookies = request.headers.get('cookie');
+    if (cookies) {
+      const authCookie = cookies.split(';').find(cookie => 
+        cookie.trim().startsWith('auth_token=')
+      );
+      if (authCookie) {
+        const token = authCookie.split('=')[1];
+        const verification = verifyToken(token);
+        if (verification.success) {
+          return verification.user;
+        }
+      }
+    }
+
+    // Fallback to Authorization header
     const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return null;
+    if (authHeader) {
+      const token = extractTokenFromHeader(authHeader);
+      if (token) {
+        const verification = verifyToken(token);
+        if (verification.success) {
+          return verification.user;
+        }
+      }
     }
 
-    const token = extractTokenFromHeader(authHeader);
-    if (!token) {
-      return null;
-    }
-
-    const verification = verifyToken(token);
-    if (!verification.success) {
-      return null;
-    }
-
-    return verification.user;
+    return null;
   } catch (error) {
+    console.error('Error getting user from cookies:', error);
     return null;
   }
 }
@@ -207,10 +220,14 @@ export function getUserFromCookies(request) {
 // Clear authentication cookies
 export function clearAuthCookies() {
   const cookies = [
+    'auth_token=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0',
     'adminToken=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0',
     'studentToken=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0',
     'adminData=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0',
-    'studentData=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0'
+    'studentData=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0',
+    'superAdminToken=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0',
+    'superAdminUser=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0',
+    'userData=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0'
   ];
   
   return cookies;
