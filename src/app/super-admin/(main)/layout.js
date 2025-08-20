@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSuperAdminAuth } from '@/hooks/useSuperAdminAuth';
+import Link from 'next/link';
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -45,6 +46,8 @@ const AdminLayout = ({ children }) => {
 
   const activeNav = getActiveNav();
 
+  console.log('Layout auth state:', { loading, isAuthenticated, user });
+  
   // Show loading state while checking authentication
   if (loading) {
     return (
@@ -59,7 +62,15 @@ const AdminLayout = ({ children }) => {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return null; // This will trigger redirect in the hook
+    // Show a loading state while redirecting
+    return (
+      <div className="flex h-screen bg-gray-900 text-gray-200 items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -123,10 +134,9 @@ const AdminLayout = ({ children }) => {
             {navItems.map((item) => {
               const isActive = isActivePath(item.href);
               return (
-                <motion.a
+                <Link
                   key={item.id}
                   href={item.href}
-                  whileHover={{ x: 5 }}
                   className={`w-full flex items-center py-3 px-4 rounded-lg transition-all cursor-pointer ${
                     isActive
                       ? 'bg-gradient-to-r from-blue-500/20 to-purple-600/20 text-white border border-blue-500/30 shadow-lg'
@@ -143,7 +153,7 @@ const AdminLayout = ({ children }) => {
                       {item.label}
                     </motion.span>
                   )}
-                </motion.a>
+                </Link>
               );
             })}
           </nav>
@@ -190,7 +200,7 @@ const AdminLayout = ({ children }) => {
                 {navItems.map((item) => {
                   const isActive = isActivePath(item.href);
                   return (
-                    <a
+                    <Link
                       key={item.id}
                       href={item.href}
                       className={`w-full flex items-center py-3 px-4 rounded-lg transition-all cursor-pointer ${
@@ -202,7 +212,7 @@ const AdminLayout = ({ children }) => {
                     >
                       <span className={`text-xl mr-3 ${isActive ? 'scale-110' : ''}`}>{item.icon}</span>
                       <span className={`font-medium ${isActive ? 'text-blue-100' : ''}`}>{item.label}</span>
-                    </a>
+                    </Link>
                   );
                 })}
               </nav>

@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
 
 const SuperAdminLogin = () => {
   const router = useRouter();
@@ -42,7 +43,11 @@ const SuperAdminLogin = () => {
 
       if (response.ok) {
         // Store JWT token in cookies for middleware access
-        document.cookie = `superAdminToken=${data.token}; path=/; max-age=${24 * 60 * 60}; secure; samesite=strict`;
+        const cookieString = `superAdminToken=${data.token}; path=/; max-age=${24 * 60 * 60}; samesite=lax`;
+        document.cookie = cookieString;
+        console.log('Setting cookie:', cookieString);
+        console.log('All cookies:', document.cookie);
+        
         localStorage.setItem('superAdminUser', JSON.stringify(data.user));
         
         toast.success('Login successful!');
@@ -187,8 +192,14 @@ const SuperAdminLogin = () => {
 
             {/* Additional Info */}
             <div className="mt-6 text-center">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 mb-4">
                 This is a restricted access portal for system administrators only.
+              </p>
+              <p className="text-gray-400">
+                Need an account?{' '}
+                <Link href="/super-admin/signup" className="text-blue-400 hover:text-blue-300 font-medium">
+                  Create Account
+                </Link>
               </p>
             </div>
           </div>

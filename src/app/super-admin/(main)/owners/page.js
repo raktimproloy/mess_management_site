@@ -1,6 +1,6 @@
 import React from 'react'
 import ProtectedSuperAdminRoute from '@/components/common/ProtectedSuperAdminRoute'
-import OwnerManagement from '@/components/pages/Admin/Owners'
+import OwnerManagement from '@/components/pages/SuperAdmin/Owners'
 
 export default function Owners() {
   return (

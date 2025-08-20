@@ -10,41 +10,71 @@ export const useSuperAdminAuth = () => {
   const router = useRouter();
 
   useEffect(() => {
+    // Check for existing token on mount
+    console.log('Auth hook initialized');
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
     try {
       setLoading(true);
+      console.log('checkAuth: Starting authentication check');
       
       // Get token from cookies
       const token = getCookie('superAdminToken');
+      console.log('checkAuth: Token from cookie:', token ? 'exists' : 'not found');
+      if (token) {
+        console.log('checkAuth: Token length:', token.length);
+        console.log('checkAuth: Token preview:', token.substring(0, 20) + '...');
+      }
       
       if (!token) {
+        console.log('checkAuth: No token found, setting not authenticated');
         setIsAuthenticated(false);
         setUser(null);
+        setLoading(false);
         return;
       }
 
       // Verify token with backend
+      console.log('checkAuth: Making API call to /api/super-admin/me with token:', token.substring(0, 20) + '...');
       const response = await fetch('/api/super-admin/me', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
+      console.log('checkAuth: API response status:', response.status);
+      console.log('checkAuth: API response ok:', response.ok);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('checkAuth: API error response:', errorText);
+      }
+
       if (response.ok) {
         const data = await response.json();
+        console.log('checkAuth: Token valid, user authenticated:', data.user);
         setUser(data.user);
         setIsAuthenticated(true);
       } else {
-        // Token is invalid, clear everything
-        logout();
+        const errorData = await response.json().catch(() => ({}));
+        console.log('checkAuth: Token invalid, API error:', errorData);
+        // Token is invalid, clear everything but don't redirect
+        document.cookie = 'superAdminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
+        localStorage.removeItem('superAdminUser');
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('Auth check error:', error);
-      logout();
+      console.error('checkAuth: Auth check error:', error);
+      // On error, clear auth state but don't redirect
+      document.cookie = 'superAdminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
+      localStorage.removeItem('superAdminUser');
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
+      console.log('checkAuth: Setting loading to false');
       setLoading(false);
     }
   };
@@ -59,7 +89,7 @@ export const useSuperAdminAuth = () => {
       console.error('Logout error:', error);
     } finally {
       // Clear all auth data
-      document.cookie = 'superAdminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'superAdminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
       localStorage.removeItem('superAdminUser');
       setUser(null);
       setIsAuthenticated(false);
@@ -73,7 +103,13 @@ export const useSuperAdminAuth = () => {
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
+    if (parts.length === 2) {
+      const token = parts.pop().split(';').shift();
+      console.log('Cookie search for', name, 'found:', token ? 'yes' : 'no');
+      return token;
+    }
+    console.log('Cookie search for', name, 'found: no');
+    console.log('All cookies:', document.cookie);
     return null;
   };
 
