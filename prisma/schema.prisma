@@ -1,0 +1,272 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id             Int      @id @default(autoincrement())
+  name           String
+  phone          String   @unique
+  password      String
+  subdomain     String?  // Made optional, removed unique constraint
+  smsActivation Boolean  @default(false) @map("sms_activation")
+  smsAmount     Float    @default(0) @map("sms_amount")
+  otp           String?
+  otpExpire     DateTime? @map("otp_expire")
+  status        String   @default("active") // active, inactive, suspended
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  categories Category[]
+  students Student[]
+  rents Rent[]
+  rentHistory RentHistory[]
+  paymentRequests PaymentRequest[]
+  complaints Complaint[]
+  discounts Discount[]
+  payments Payment[]
+
+  @@map("admins")
+}
+
+model SuperAdmin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("super_admin")
+  status    String   @default("active") // active, inactive, suspended
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("super_admins")
+}
+
+model Category {
+  id             Int      @id @default(autoincrement())
+  title          String
+  rentAmount     Float    @map("rent_amount")
+  externalAmount Float    @default(0) @map("external_amount")
+  description    String
+  status         Int      @default(1)
+  ownerId        Int      @map("owner_id") // NEW: owner ID
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  owner         Admin             @relation(fields: [ownerId], references: [id])
+  students     Student[]
+  rents        Rent[]
+  paymentRequests PaymentRequest[]
+
+  @@map("categories")
+}
+
+model Student {
+  id           Int      @id @default(autoincrement())
+  name         String
+  phone        String   @unique
+  smsPhone     String   @map("sms_phone")
+  password     String
+  profileImage String?  @map("profile_image")
+  hideRanking  Int      @default(0) @map("hide_ranking")
+  status       String   @default("living") // living, leave
+  categoryId   Int      @map("category_id")
+  referenceId  Int?     @map("reference_id") // NEW: reference student ID
+  discountId   Int?     @map("discount_id") // NEW: discount ID
+  discountAmount Float  @default(0) @map("discount_amount") // NEW: total discount amount for reference students
+  bookingAmount Float   @default(0) @map("booking_amount") // NEW: booking amount
+  joiningDate  DateTime @map("joining_date")
+  ownerId      Int      @map("owner_id") // NEW: owner ID
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  owner        Admin             @relation(fields: [ownerId], references: [id])
+  categoryRef  Category?         @relation(fields: [categoryId], references: [id])
+  discountRef  Discount?         @relation(fields: [discountId], references: [id])
+  rents        Rent[]
+  rentHistory  RentHistory[]
+  paymentRequests PaymentRequest[]
+  complaints   Complaint[]
+  // Self-referencing relation for references
+  referencedBy Student[] @relation("StudentReference")
+  references   Student? @relation("StudentReference", fields: [referenceId], references: [id])
+
+  @@map("students")
+}
+
+model Rent {
+  id             Int      @id @default(autoincrement())
+  rentAmount     Float    @map("rent_amount")
+  advanceAmount  Float    @default(0) @map("advance_amount")
+  externalAmount Float    @default(0) @map("external_amount")
+  previousDue    Float    @default(0) // NEW: previous due
+  previousDuePaid Float   @default(0) // NEW: previous due paid
+  discountAmount Float    @default(0) @map("discount_amount") // NEW: discount amount for reference students
+  status         String   @default("unpaid") // unpaid, paid, partial
+  rentPaid       Float    @default(0) @map("rent_paid")
+  advancePaid    Float    @default(0) // NEW: advance paid
+  externalPaid   Float    @default(0) // NEW: external paid
+  paidDate       DateTime? // NEW: paid date
+  paidType       String?  // NEW: paid type (cash, online, etc)
+  studentId      Int      @map("student_id")
+  categoryId     Int      @map("category_id")
+  ownerId        Int      @map("owner_id") // NEW: owner ID
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  owner         Admin             @relation(fields: [ownerId], references: [id])
+  student       Student           @relation(fields: [studentId], references: [id])
+  category      Category          @relation(fields: [categoryId], references: [id])
+  rentHistory   RentHistory[]
+  paymentRequests PaymentRequest[]
+
+  @@map("rents")
+}
+
+model RentHistory {
+  id          Int      @id @default(autoincrement())
+  rentMonth   String   @map("rent_month") // Format: "YYYY-MM"
+  paidDate    DateTime @map("paid_date")
+  studentId   Int      @map("student_id")
+  categoryId  Int      @map("category_id")
+  status      String   @default("unpaid") // unpaid, approved, rejected
+  paymentType String   @map("payment_type") // on hand, online, etc.
+  dueRent     Float    @map("due_rent")
+  dueAdvance  Float    @default(0) @map("due_advance")
+  dueExternal Float    @default(0) @map("due_external")
+  paidRent    Float    @map("paid_rent")
+  paidAdvance Float    @default(0) @map("paid_advance")
+  paidExternal Float   @default(0) @map("paid_external")
+  rentId      Int?     @map("rent_id")
+  ownerId     Int      @map("owner_id") // NEW: owner ID
+  details     Json?    // Store additional details as JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  owner         Admin             @relation(fields: [ownerId], references: [id])
+  student       Student           @relation(fields: [studentId], references: [id])
+  rent          Rent?             @relation(fields: [rentId], references: [id])
+  paymentRequests PaymentRequest[]
+
+  @@map("rent_history")
+}
+
+model PaymentRequest {
+  id            Int      @id @default(autoincrement())
+  studentId     Int      @map("student_id")
+  categoryId    Int      @map("category_id")
+  rentId        Int      @map("rent_id")
+  rentHistoryId Int?     @map("rent_history_id") // null initially, set after approval
+  status        String   @default("pending") // pending, approved, rejected
+  paymentMethod String   @map("payment_method") // on hand, online
+  bikashNumber  String?  @map("bikash_number")
+  trxId         String?  @map("trx_id")
+  totalAmount   Float    @map("total_amount")
+  rentAmount    Float    @default(0) @map("rent_amount")
+  advanceAmount Float    @default(0) @map("advance_amount")
+  externalAmount Float   @default(0) @map("external_amount")
+  previousDueAmount Float @default(0) @map("previous_due_amount")
+  ownerId       Int      @map("owner_id") // NEW: owner ID
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  owner         Admin             @relation(fields: [ownerId], references: [id])
+  student       Student           @relation(fields: [studentId], references: [id])
+  category      Category          @relation(fields: [categoryId], references: [id])
+  rent          Rent              @relation(fields: [rentId], references: [id])
+  rentHistory   RentHistory?      @relation(fields: [rentHistoryId], references: [id])
+
+  @@map("payment_requests")
+}
+
+model Payment {
+  id           Int      @id @default(autoincrement())
+  trxid        String   @unique @map("trxid")
+  amount       String
+  fromDetails  String?  @map("from_details")
+  paymentDate  String?  @map("payment_date")
+  paymentTime  String?  @map("payment_time")
+  status       String   @default("pending") @map("status") // pending, approved, rejected
+  ownerId      Int      @map("owner_id") // NEW: owner ID
+  receivedAt   DateTime @default(now()) @map("received_at")
+
+  // Relations
+  owner        Admin             @relation(fields: [ownerId], references: [id])
+
+  @@map("payments")
+}
+
+model Testing {
+  id    Int    @id @default(autoincrement())
+  value Int
+  createdAt DateTime @default(now())
+
+  @@map("testing")
+}
+
+model Discount {
+  id            Int      @id @default(autoincrement())
+  title         String
+  discountType  DiscountType @map("discount_type")
+  discountAmount Float   @map("discount_amount")
+  description   String
+  status        Int      @default(1)
+  ownerId       Int      @map("owner_id") // NEW: owner ID
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  owner         Admin             @relation(fields: [ownerId], references: [id])
+  students      Student[]
+
+  @@map("discounts")
+}
+
+enum DiscountType {
+  percent
+  tk
+}
+
+model Complaint {
+  id          Int      @id @default(autoincrement())
+  studentId   Int      @map("student_id")
+  title       String
+  details     String
+  status      ComplaintStatus @default(pending)
+  complainFor ComplaintType @map("complain_for")
+  ownerId     Int      @map("owner_id") // NEW: owner ID
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  owner       Admin             @relation(fields: [ownerId], references: [id])
+  student     Student           @relation(fields: [studentId], references: [id])
+
+  @@map("complaints")
+}
+
+enum ComplaintStatus {
+  pending
+  checking
+  solved
+  canceled
+}
+
+enum ComplaintType {
+  mess
+  room
+}
